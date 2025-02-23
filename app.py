@@ -16,6 +16,8 @@ def analyze_sentiment(text):
     payload = {"inputs": text}
     response = requests.post(API_URL, headers=headers, json=payload)
     
+    print("Hugging Face API Response:", response.status_code, response.text)  # Debug log
+    
     if response.status_code == 200:
         result = response.json()
         return result[0][0]["label"]  # Returns "POSITIVE" or "NEGATIVE"
