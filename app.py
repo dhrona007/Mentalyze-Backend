@@ -1,8 +1,10 @@
 from flask import Flask, request, jsonify
+from flask_cors import CORS  # Import CORS
 import requests
 import os
 
 app = Flask(__name__)
+CORS(app)  # Enable CORS for all routes
 
 # Hugging Face Inference API settings
 API_URL = "https://api-inference.huggingface.co/models/distilbert-base-uncased-finetuned-sst-2-english"
