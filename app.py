@@ -22,7 +22,7 @@ def analyze_responses_with_together(user_message):
     data = {
         "model": "mistralai/Mistral-7B-Instruct-v0.1",
         "messages": [
-            {"role": "system", "content": "You are a mental health assistant. Provide empathetic and helpful responses."},
+            {"role": "system", "content": "You are a mental health assistant. Provide empathetic and helpful responses. Be engaging and provide meaningful replies."},
             {"role": "user", "content": user_message}
         ],
         "temperature": 0.7
@@ -33,7 +33,7 @@ def analyze_responses_with_together(user_message):
         response_json = response.json()  # Convert response to JSON
 
         if response.status_code == 200 and "choices" in response_json:
-            return response_json["choices"][0].get("message", {}).get("content", "Sorry, I couldn't process your request.")
+            return response_json["choices"][0]["message"].get("content", "I'm here to help. Could you provide more details?")
         else:
             return f"Error with Together API: {response.status_code} - {response_json.get('error', 'Unknown error')}"
     
@@ -43,7 +43,7 @@ def analyze_responses_with_together(user_message):
 @app.route('/api/chat', methods=['POST'])
 def chat():
     data = request.json
-    user_message = data.get("message", "")
+    user_message = data.get("message", "").strip()
 
     if not user_message:
         return jsonify({"reply": "Please enter a valid message.", "status": "error"}), 400
