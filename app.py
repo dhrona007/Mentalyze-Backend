@@ -10,10 +10,7 @@ CORS(app)
 TOGETHER_API_URL = "https://api.together.xyz/v1/chat/completions"
 TOGETHER_API_KEY = os.getenv("TOGETHER_API_KEY")  # Load API key from environment
 
-# Store conversation history (limited for session-based memory)
-conversation_history = {}
-
-def analyze_responses_with_together(user_id, user_message):
+def analyze_responses_with_together(user_message):
     """
     Send user's query to the Together API for mental health analysis.
     """
@@ -22,31 +19,19 @@ def analyze_responses_with_together(user_id, user_message):
         "Content-Type": "application/json"
     }
 
-    # Retrieve chat history for this user
-    if user_id not in conversation_history:
-        conversation_history[user_id] = []
-
-    # Append user message to chat history
-    conversation_history[user_id].append({"role": "user", "content": user_message})
-
-    # Prepare messages with context
-    messages = [{"role": "system", "content": "You are a mental health assistant. Provide empathetic and helpful responses."}] + conversation_history[user_id]
-
     data = {
         "model": "mistralai/Mistral-7B-Instruct-v0.1",
-        "messages": messages,
+        "messages": [
+            {"role": "system", "content": "You are a mental health assistant. Provide empathetic and helpful responses."},
+            {"role": "user", "content": user_message}
+        ],
         "temperature": 0.7
     }
 
     try:
         response = requests.post(TOGETHER_API_URL, headers=headers, json=data)
         if response.status_code == 200:
-            bot_reply = response.json()["choices"][0]["message"]["content"]
-
-            # Append AI response to conversation history
-            conversation_history[user_id].append({"role": "assistant", "content": bot_reply})
-
-            return bot_reply
+            return response.json()["choices"][0]["message"]["content"]
         else:
             return f"Error with Together API: {response.status_code} - {response.text}"
     except Exception as e:
@@ -55,13 +40,12 @@ def analyze_responses_with_together(user_id, user_message):
 @app.route('/api/chat', methods=['POST'])
 def chat():
     data = request.json
-    user_id = data.get("user_id", "default_user")  # Assign user-specific ID if available
     user_message = data.get("message", "")
 
     if not user_message:
         return jsonify({"reply": "Please enter a valid message.", "status": "error"}), 400
 
-    analysis = analyze_responses_with_together(user_id, user_message)
+    analysis = analyze_responses_with_together(user_message)
 
     return jsonify({'reply': analysis, 'status': 'response'})
 
