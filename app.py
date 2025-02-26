@@ -1,45 +1,65 @@
 from flask import Flask, request, jsonify
-from flask_cors import CORS  # Import CORS
+from flask_cors import CORS  # Enable CORS
 import requests
 import os
 
 app = Flask(__name__)
-CORS(app)  # Enable CORS for all routes
+CORS(app)
 
-# Hugging Face Inference API settings
-API_URL = "https://api-inference.huggingface.co/models/distilbert-base-uncased-finetuned-sst-2-english"
-API_TOKEN = os.getenv("HUGGING_FACE_API_TOKEN")  # Store your API token in an environment variable
+# Together API settings
+TOGETHER_API_URL = "https://api.together.xyz/v1/chat/completions"
+TOGETHER_API_KEY = os.getenv("TOGETHER_API_KEY")  # Store your API key in an environment variable
 
-# Function to analyze sentiment using Hugging Face API
-def analyze_sentiment(text):
-    headers = {"Authorization": f"Bearer {API_TOKEN}"}
-    payload = {"inputs": text}
-    response = requests.post(API_URL, headers=headers, json=payload)
+def analyze_responses_with_together():
+    """
+    Send predefined questions to the Together API for mental health analysis.
+    """
+    questions = [
+         "How have you been feeling lately?",
+        "Have you experienced any significant changes in your sleep patterns?",
+        "Do you often feel anxious or stressed?",
+        "Have you lost interest in activities you used to enjoy?",
+        "Do you have a support system (friends, family) you can rely on?",
+        "How would you rate your overall mood on a scale of 1 to 10?"
+    ]
     
-    print("Hugging Face API Response:", response.status_code, response.text)  # Debug log
+    user_query = " ".join(questions)
     
-    if response.status_code == 200:
-        result = response.json()
-        return result[0][0]["label"]  # Returns "POSITIVE" or "NEGATIVE"
-    else:
-        return f"Error: {response.status_code} - {response.text}"
+    headers = {
+        "Authorization": f"Bearer {TOGETHER_API_KEY}",
+        "Content-Type": "application/json"
+    }
+    
+    data = {
+        "model": "mistralai/Mistral-7B-Instruct-v0.1",  # Replace with correct Together model name
+        "messages": [
+            {"role": "system", "content": "You are a mental health assistant. Analyze the user's responses and provide helpful advice."},
+            {"role": "user", "content": user_query}
+        ],
+        "temperature": 0.7
+    }
+
+    try:
+        response = requests.post(TOGETHER_API_URL, headers=headers, json=data)
+        if response.status_code == 200:
+            return response.json()["choices"][0]["message"]["content"]
+        else:
+            return f"Error with Together API: {response.status_code} - {response.text}"
+    except Exception as e:
+        return f"Error with Together API: {e}"
 
 # Chat endpoint
-@app.route('/api/chat', methods=['POST'])
+@app.route('/api/chat', methods=['GET'])
 def chat():
-    data = request.json
-    user_message = data.get('message', '')
+    # Analyze sentiment using Together API
+    analysis = analyze_responses_with_together()
 
-    # Analyze sentiment using Hugging Face API
-    sentiment = analyze_sentiment(user_message)
-
-    # Return the sentiment analysis result
-    return jsonify({'reply': f"Sentiment: {sentiment}", 'status': 'analysis'})
+    return jsonify({'reply': analysis, 'status': 'analysis'})
 
 # Root endpoint
 @app.route('/')
 def index():
-    return "Welcome to the Mental Health Chatbot Backend!"
+    return "Welcome to the Mental Health Chatbot Backend using Together API!"
 
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5000))
