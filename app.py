@@ -30,10 +30,13 @@ def analyze_responses_with_together(user_message):
 
     try:
         response = requests.post(TOGETHER_API_URL, headers=headers, json=data)
-        if response.status_code == 200:
-            return response.json()["choices"][0]["message"]["content"]
+        response_json = response.json()  # Convert response to JSON
+
+        if response.status_code == 200 and "choices" in response_json:
+            return response_json["choices"][0].get("message", {}).get("content", "Sorry, I couldn't process your request.")
         else:
-            return f"Error with Together API: {response.status_code} - {response.text}"
+            return f"Error with Together API: {response.status_code} - {response_json.get('error', 'Unknown error')}"
+    
     except Exception as e:
         return f"Error with Together API: {e}"
 
