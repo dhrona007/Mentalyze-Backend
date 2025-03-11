@@ -8,7 +8,7 @@ from dotenv import load_dotenv  # Add this line
 load_dotenv()  # Add this line
 
 app = Flask(__name__)
-CORS(app, resources={r"/api/*": {"origins": "https://your-netlify-app.netlify.app"}})
+CORS(app, resources={r"/api/*": {"origins": "https://mentalyze-frontend.netlify.app"}})
 
 # Together API settings
 TOGETHER_API_URL = "https://api.together.xyz/v1/chat/completions"
