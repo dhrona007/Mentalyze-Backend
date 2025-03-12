@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 app = Flask(__name__)
-CORS(app, resources={r"/api/*": {"origins": "https://mentalyze-frontend.netlify.app"}})
+CORS(app, resources={r"/api/*": {"origins": "https://mentalyze.netlify.app"}})
 # CORS(app)  # Allow all origins for all routes
 
 # Together API settings
