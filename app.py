@@ -8,7 +8,8 @@ from dotenv import load_dotenv
 load_dotenv()
 
 app = Flask(__name__)
-CORS(app)  # Allow all origins for all routes
+CORS(app, resources={r"/api/*": {"origins": "https://mentalyze-frontend.netlify.app"}})
+# CORS(app)  # Allow all origins for all routes
 
 # Together API settings
 TOGETHER_API_URL = "https://api.together.xyz/v1/chat/completions"
